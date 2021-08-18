@@ -1,5 +1,6 @@
 package it.partec;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -22,7 +23,14 @@ public class Student extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		PrintWriter out = response.getWriter();
 		response.setContentType("application/json");
-		long id = Long.parseLong(request.getParameter("id")); // leggo il parametro dalla query string
+		long id = 0;
+		try {
+			id = Long.parseLong(request.getPathInfo().replace("/", "")); // leggo la url per avere l'id
+		} catch(NumberFormatException | NullPointerException e) {
+			e.printStackTrace();
+			response.setStatus(400);
+			return;
+		}
 		JSONParser parser = new JSONParser();
 		JSONObject result = null; 
 		// leggo il file dalla cartella predisposta per contenere le risorse
@@ -51,14 +59,34 @@ public class Student extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		if(request.getPathInfo() != null) {
+			response.setStatus(400);
+			return;
+		}
 		PrintWriter out = response.getWriter();
 		JSONParser parser = new JSONParser();
-		// lettura dei parametri dal form
-		String name = request.getParameter("name");
-		String surname = request.getParameter("surname");
-		long age = Long.parseLong(request.getParameter("age"));
+		// lettura dei parametri dal body request
+		String json = "";
+		try(BufferedReader brd = new BufferedReader(request.getReader())) {
+			String line;
+			while((line = brd.readLine()) != null) {
+				json = json + line;
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+			response.setStatus(400);
+			return;
+		}
+		JSONObject newStudent = null;
 		JSONArray listStudent = null;
-		JSONObject newStudent = new JSONObject();
+		// creo l'oggetto dalla stringa json letta
+		try {
+			newStudent = (JSONObject) parser.parse(json);
+		} catch(ParseException e) {
+			e.printStackTrace();
+			response.setStatus(400);
+			return;
+		}
 		long id = 0; 
 		try(Reader file = new InputStreamReader(getClass().getClassLoader().getResourceAsStream("liststudent.json"))) {
 			Object obj = parser.parse(file);
@@ -73,10 +101,6 @@ public class Student extends HttpServlet {
 			e.printStackTrace();
 		}
 		if(id != 0) {
-			newStudent.put("id", id + 1);
-			newStudent.put("name", name);
-			newStudent.put("surname", surname);
-			newStudent.put("age", age);
 			listStudent.add(newStudent);
 			// scrivo il file con il nuovo studente aggiunto
 			try(Writer file = new PrintWriter(getClass().getClassLoader().getResource("liststudent.json").getFile())) {
