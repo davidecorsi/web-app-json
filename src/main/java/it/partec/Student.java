@@ -37,7 +37,7 @@ public class Student extends HttpServlet {
 				}
 			}
 		} catch(ParseException e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 		if(result != null) {
 			out.print(result.toJSONString());
@@ -70,7 +70,7 @@ public class Student extends HttpServlet {
 				}
 			}
 		} catch(ParseException e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 		if(id != 0) {
 			newStudent.put("id", id + 1);
@@ -81,6 +81,9 @@ public class Student extends HttpServlet {
 			// scrivo il file con il nuovo studente aggiunto
 			try(Writer file = new PrintWriter(getClass().getClassLoader().getResource("liststudent.json").getFile())) {
 				file.write(listStudent.toJSONString());
+			} catch(Exception e) {
+				e.printStackTrace();
+				response.setStatus(503);
 			}
 			response.setStatus(201);
 		} else {

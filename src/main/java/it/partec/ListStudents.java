@@ -27,7 +27,7 @@ public class ListStudents extends HttpServlet {
 			listStudent = (JSONArray) obj;
 			out.print(listStudent.toJSONString());
 		} catch(ParseException e) {
-			System.out.println(e);
+			e.printStackTrace();;
 			response.setStatus(503);
 		}
 	}
